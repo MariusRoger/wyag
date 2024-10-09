@@ -12,6 +12,8 @@ from datetime import datetime
 from fnmatch import fnmatch
 from math import ceil
 
+from repository import GitRepository
+
 argparser = argparse.ArgumentParser(description="My own git engine!")
 argsubparsers = argparser.add_subparsers(title="Commands", dest="command")
 argsubparsers.required = True
