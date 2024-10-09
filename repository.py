@@ -69,10 +69,16 @@ def repo_dir(repo: GitRepository, *path: str | Path, mkdir: bool = False) -> str
 
 def repo_create(path: str | Path) -> GitRepository:
     """Create a new git repository at path"""
+    # Make sure we are not already in a repository
+    existing_repo = repo_find(path, required=False)
+    if existing_repo and (existing_repo.worktree != os.path.realpath(path)):
+        raise Exception(
+            f"Cannot create repository within a repository, located at {existing_repo.worktree}."
+        )
+
     repo = GitRepository(path, force=True)
 
-    # First, we make sure the path either doesn't exist or is an empty dir
-
+    # Make sure the path either doesn't exist or is an empty dir
     if os.path.exists(repo.worktree):
         if not os.path.isdir(repo.worktree):
             raise Exception(f"{path} is not a directory.")
@@ -112,3 +118,24 @@ def repo_default_config() -> configparser.ConfigParser:
     config.set("core", "bare", "false")
 
     return config
+
+
+def repo_find(path: str | Path = ".", required: bool = True) -> GitRepository | None:
+    real_path = os.path.realpath(path)
+
+    if os.path.isdir(os.path.join(real_path, ".git")):
+        return GitRepository(real_path)
+
+    # If there is no .git file, recurse in parent
+    parent = os.path.realpath(os.path.join(real_path, ".."))
+
+    if parent == path:
+        # Base case : os.path.join("/", "..") == "/":
+        # If parent==path, then path is root.
+        if required:
+            raise Exception("Not a git directory.")
+        else:
+            return None
+
+    # Recursion step
+    return repo_find(parent, required)
