@@ -12,11 +12,21 @@ from datetime import datetime
 from fnmatch import fnmatch
 from math import ceil
 
-from repository import GitRepository
+from repository import repo_create
 
 argparser = argparse.ArgumentParser(description="My own git engine!")
 argsubparsers = argparser.add_subparsers(title="Commands", dest="command")
 argsubparsers.required = True
+
+
+argsp = argsubparsers.add_parser("init", help="Initialize a new (empty) repository.")
+argsp.add_argument(
+    "path",
+    metavar="directory",
+    nargs="?",
+    default=".",
+    help="Where to create the repository.",
+)
 
 
 def cmd_add(args): ...
@@ -25,7 +35,10 @@ def cmd_check_ignore(args): ...
 def cmd_checkout(args): ...
 def cmd_commit(args): ...
 def cmd_hash_object(args): ...
-def cmd_init(args): ...
+def cmd_init(args):
+    repo_create(args.path)
+
+
 def cmd_log(args): ...
 def cmd_ls_files(args): ...
 def cmd_ls_tree(args): ...
