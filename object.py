@@ -32,10 +32,6 @@ class GitObject(object):
         pass
 
 
-class GitBlob(GitObject):
-    fmt = b"blob"
-
-
 class GitCommit(GitObject):
     fmt = b"commit"
 
@@ -46,6 +42,16 @@ class GitTree(GitObject):
 
 class GitTag(GitObject):
     fmt = b"tag"
+
+
+class GitBlob(GitObject):
+    fmt = b"blob"
+
+    def serialize(self):
+        return self.blobdata
+
+    def deserialize(self, data):
+        self.blobdata = data
 
 
 def object_read(repo: GitRepository, sha: str) -> GitObject | None:
