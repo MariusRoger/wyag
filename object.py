@@ -45,6 +45,8 @@ class GitTag(GitObject):
 
 
 class GitBlob(GitObject):
+    """A git blob object"""
+
     fmt = b"blob"
 
     def serialize(self):
@@ -122,3 +124,8 @@ def object_write(obj: GitObject, repo: GitRepository | None = None) -> str:
                 file.write(zlib.compress(raw_object))
 
     return sha
+
+
+def object_find(repo: GitRepository, name: str, fmt: bytes = None, follow: bool = True):
+    """Temporary placeholder function for object name resolution."""
+    return name

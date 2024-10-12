@@ -121,6 +121,10 @@ def repo_default_config() -> configparser.ConfigParser:
 
 
 def repo_find(path: str | Path = ".", required: bool = True) -> GitRepository | None:
+    """
+    Find the root of the current repository.
+    Fails if required and not in a repository.
+    """
     real_path = os.path.realpath(path)
 
     if os.path.isdir(os.path.join(real_path, ".git")):
@@ -129,7 +133,7 @@ def repo_find(path: str | Path = ".", required: bool = True) -> GitRepository | 
     # If there is no .git file, recurse in parent
     parent = os.path.realpath(os.path.join(real_path, ".."))
 
-    if parent == path:
+    if parent == real_path:
         # Base case : os.path.join("/", "..") == "/":
         # If parent==path, then path is root.
         if required:

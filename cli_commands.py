@@ -1,13 +1,28 @@
-from repository import repo_create
+import sys
+
+from object import GitObject, object_find, object_read
+from repository import GitRepository, repo_create, repo_find
 
 
 def cmd_add(args): ...
-def cmd_cat_file(args): ...
+def cmd_cat_file(args):
+    """CLI function to display contents of an object."""
+    repo = repo_find()
+    cat_file(repo, args.object, fmt=args.type.encode())
+
+
+def cat_file(repo: GitRepository, obj: GitObject, fmt: bytes = None):
+    """Displays the contents of an object"""
+    out_obj = object_read(repo, object_find(repo, obj, fmt=fmt))
+    sys.stdout.buffer.write(out_obj.serialize())
+
+
 def cmd_check_ignore(args): ...
 def cmd_checkout(args): ...
 def cmd_commit(args): ...
 def cmd_hash_object(args): ...
 def cmd_init(args):
+    """CLI function to initialize a repository."""
     repo_create(args.path)
 
 
