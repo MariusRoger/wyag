@@ -36,6 +36,15 @@ class GitObject(object):
 class GitCommit(GitObject):
     fmt = b"commit"
 
+    def serialize(self, repo: GitRepository):
+        return kvlm_serialize(self.kvlm)
+
+    def deserialize(self, data: bytes):
+        self.kvlm = kvlm_parse(data)
+
+    def init(self):
+        self.kvlm = collections.OrderedDict()
+
 
 class GitTree(GitObject):
     fmt = b"tree"
