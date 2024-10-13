@@ -129,3 +129,23 @@ def object_write(obj: GitObject, repo: GitRepository | None = None) -> str:
 def object_find(repo: GitRepository, name: str, fmt: bytes = None, follow: bool = True):
     """Temporary placeholder function for object name resolution."""
     return name
+
+
+def object_hash(file_desc, fmt: bytes, repo: GitRepository | None = None) -> str:
+    """Hash an object, writing it to a repository if provided"""
+    data = file_desc.read()
+
+    # Choose constructor depending on fmt argument
+    match fmt:
+        case b"commit":
+            obj = GitCommit(data)
+        case b"tree":
+            obj = GitTree(data)
+        case b"tag":
+            obj = GitTag(data)
+        case b"blob":
+            obj = GitBlob(data)
+        case _:
+            raise Exception(f"Unknown type {fmt.decode()}.")
+
+    return object_write(obj, repo)

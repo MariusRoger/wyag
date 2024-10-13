@@ -1,6 +1,6 @@
 import sys
 
-from object import GitObject, object_find, object_read
+from object import GitObject, object_find, object_hash, object_read
 from repository import GitRepository, repo_create, repo_find
 
 
@@ -20,7 +20,17 @@ def cat_file(repo: GitRepository, obj: GitObject, fmt: bytes = None):
 def cmd_check_ignore(args): ...
 def cmd_checkout(args): ...
 def cmd_commit(args): ...
-def cmd_hash_object(args): ...
+def cmd_hash_object(args):
+    if args.write:
+        repo = repo_find()
+    else:
+        repo = None
+
+    with open(args.path, "rb") as file_desc:
+        sha = object_hash(file_desc, args.type.encode(), repo)
+        print(sha)
+
+
 def cmd_init(args):
     """CLI function to initialize a repository."""
     repo_create(args.path)
