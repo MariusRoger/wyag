@@ -52,3 +52,12 @@ argsp.add_argument(
     "path",
     help="Read object from <file>.",
 )
+
+
+argsp = argsubparsers.add_parser("log", help="Display commit history.")
+argsp.add_argument(
+    "commit",
+    default="HEAD",
+    nargs="?",
+    help="Commit to start at.",
+)
