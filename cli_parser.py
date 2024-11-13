@@ -61,3 +61,16 @@ argsp.add_argument(
     nargs="?",
     help="Commit to start at.",
 )
+
+
+argsp = argsubparsers.add_parser("ls-tree", help="Pretty-print a tree object.")
+argsp.add_argument(
+    "-r",
+    dest="recursive",
+    action="store_true",
+    help="Recurse into sub-trees.",
+)
+argsp.add_argument(
+    "tree",
+    help="A tree-like object.",
+)

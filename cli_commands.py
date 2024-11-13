@@ -1,3 +1,4 @@
+import os
 import sys
 
 from object import GitObject, object_find, object_hash, object_read
@@ -82,7 +83,42 @@ def log_graphviz(repo: GitRepository, sha: str, already_seen: set):
 
 
 def cmd_ls_files(args): ...
-def cmd_ls_tree(args): ...
+def cmd_ls_tree(args):
+    repo = repo_find()
+    ls_tree(repo, args.tree, args.recursive)
+
+
+def ls_tree(repo: GitRepository, ref: str, recursive: bool = None, prefix: str = ""):
+    sha = object_find(repo, ref, fmt=b"tree")
+    obj = object_read(repo, sha)
+
+    for item in obj.items:
+        if len(item.mode) == 5:
+            item_raw_type = item.mode[:1]
+        else:
+            item_raw_type = item.mode[:2]
+
+        match item_raw_type:
+            case b"04":
+                item_type = "tree"
+            case b"10":
+                item_type = "blob"  # A regular file
+            case b"12":
+                item_type = "blob"  # A symlink. Blob contents is link target
+            case b"16":
+                item_type = "commit"  # A submodule
+            case _:
+                raise Exception(f"Unknown tree leaf mode {item_raw_type}")
+        
+        # If this is a leaf
+        if not (recursive and item_type=='tree'):
+            print(f"{"0"* (6-len(item.mode)) + item.mode.decode("ascii")} "
+                  + f"{item_type} {item.sha}\t{os.path.join(prefix, item.path)}")
+        
+        else:
+            ls_tree(repo, item.sha, recursive, os.path.join(prefix, item.path))
+
+
 def cmd_rev_parse(args): ...
 def cmd_rm(args): ...
 def cmd_show_ref(args): ...
