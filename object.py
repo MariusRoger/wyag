@@ -49,6 +49,22 @@ class GitCommit(GitObject):
 class GitTree(GitObject):
     fmt = b"tree"
 
+    def serialize(self):
+        return tree_serialize(self)
+
+    def deserialize(self, data: bytes):
+        self.items = tree_parse(data)
+
+    def init(self):
+        self.items = list()
+
+
+class GitTreeLeaf(object):
+    def __init__(self, mode: bytes, path: str, sha: str):
+        self.mode = mode
+        self.path = path
+        self.sha = sha
+
 
 class GitTag(GitObject):
     fmt = b"tag"
@@ -239,5 +255,69 @@ def kvlm_serialize(fields_dict: collections.OrderedDict):
 
     # Append message
     output += b"\n" + fields_dict[None] + b"\n"
+
+    return output
+
+
+def tree_parse_one(raw_object: bytes, start: int = 0) -> GitTreeLeaf:
+    # Find the space terminator of the node
+    space_term = raw_object.find(b" ", start)
+    assert space_term - start == 5 or space_term - start == 6
+
+    # Read the mode
+    mode = raw_object[start:space_term]
+    if len(mode) == 5:
+        # Normalize to 6 bytes
+        mode = b" " + mode
+
+    # Find the NULL terminator of the path
+    null_term = raw_object.find(b"\x00", space_term)
+    # and read the path
+    raw_path = raw_object[space_term + 1 : null_term]
+
+    # Read the SHA
+    raw_sha = int.from_bytes(raw_object[null_term + 1 : null_term + 21], "big")
+    # and convert it into a zero-padded 40 chars hex string
+    sha = format(raw_sha, "040x")
+
+    return null_term + 21, GitTreeLeaf(mode, raw_path.decode(), sha)
+
+
+def tree_parse(raw_object: bytes) -> list[GitTreeLeaf]:
+    position = 0
+    maximum = len(raw_object)
+    output = list()
+
+    while position < maximum:
+        position, data = tree_parse_one(raw_object, position)
+        output.append(data)
+
+    return output
+
+
+# Notice this isn't a comparison function, but a conversion function.
+# Python's default sort doesn't accept a custom comparison function, like in most
+# languages, but a `key` arguments that returns a new value, which is compared using
+# the default rules.
+# So we just return the leaf name, with an extra / if it's a directory.
+def tree_leaf_sorting_key(leaf: GitTreeLeaf):
+    if leaf.mode.startswith(b"10"):
+        return leaf.path
+    else:
+        return leaf.path + "/"
+
+
+def tree_serialize(tree: GitTree) -> bytes:
+    tree.items.sort(key=tree_leaf_sorting_key)
+    output = b""
+
+    for item in tree.items:
+        output += item.mode
+        output += b" "
+        output += item.path.encode()
+        output += b"\x00"
+
+        sha = int(item.sha, 16)
+        output += sha.to_bytes(20, byteorder="big")
 
     return output
